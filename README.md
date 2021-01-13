@@ -1,4 +1,4 @@
-# Python3 must yeee
+must be python3 yeee
 
 need one dependency, 'nested-lookup'
 
