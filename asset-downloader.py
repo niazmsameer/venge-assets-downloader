@@ -1,43 +1,61 @@
 import urllib.request, urllib.error, json, os
 from nested_lookup import nested_lookup
 
+# Gotta plug my socials y'know
+print('Venge Assets Downloader')
+print('-----------------------')
+print('Git Repository: https://github.com/niazmsameer/venge-assets-downloader')
+print('Instagram: @syn7ax.error | Discord: Syn7ax#4537')
+print('-----------------------')
+
+# Script Config
 URL = 'https://venge.io/config.json'
 HEADERS = {'User-Agent': 'Mozilla/5.0'}
 
-request = urllib.request.Request(URL, headers=HEADERS)
+# The request responsible for getting the config
+config_request = urllib.request.Request(URL, headers=HEADERS)
 
-with urllib.request.urlopen(request) as url:
-  # Retrieve the data from the Venge servers
-  data = json.loads(url.read().decode())
+# Retrieve the data from the Venge servers
+with urllib.request.urlopen(config_request) as url:
+  print('Retrieving config JSON file...')
 
-  # Perform a nested key lookup and the
-  # retrived JSON object
-  # urls will store all the resource
-  # locations
-  urls = nested_lookup('url', data)
+  # Decode raw data into a Dictionary
+  config_json = json.loads(url.read().decode())
 
-  url_count = len(urls)
-  counter = 0
+  print('Looking up URLs...')
+
+  # Lookup Dict for urls
+  resources = nested_lookup('url', config_json)
+
+  file_count = len(resources)
+  progress_counter = 0
+
+  print('Found ' + str(file_count) + ' URLs, starting download loop')
 
   # Iterate over the URLs
-  for resource_temp in urls:
-    counter += 1
+  for resource in resources:
+    # Increment counter
+    progress_counter += 1
 
-    print('File ' + str(counter) + ' of ' + str(url_count))
+    # Print status update
+    print('File ' + str(progress_counter) + ' of ' + str(file_count))
 
     # Append download target folder
-    file_loc = 'downloads/' + resource_temp
+    file_loc = 'downloads/' + resource
 
     # Append host to every url
-    resource = 'https://venge.io/' + resource_temp
+    resource_loc = 'https://venge.io/' + resource
 
     # Auto create subfolders if needed
     os.makedirs(os.path.dirname(file_loc), exist_ok=True)
 
-    req = urllib.request.Request(resource, headers=HEADERS)
+    # Perform request
+    resource_request = urllib.request.Request(resource_loc, headers=HEADERS)
     try:
-      url = urllib.request.urlopen(req)
+      url = urllib.request.urlopen(resource_request)
       with open(file_loc, 'b+w') as file:
+        # Write stream to file
         file.write(url.read())
     except urllib.error.HTTPError:
-      print('Skipping file ' + str(counter) + ' due to an HTTP error. (File might possibly be 404)')
+      # Handle HTTP errors
+      print('Skipping file ' + str(progress_counter) + ' due to an HTTP error. (File might possibly be 404)')
